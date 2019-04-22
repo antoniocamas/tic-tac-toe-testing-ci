@@ -1,0 +1,6 @@
+projectKey=es.codeurjc.ais:antonio.camas.maestre
+serverUrl=http://10.0.2.15:8686
+serverVersion=6.7.6.38781
+dashboardUrl=http://10.0.2.15:8686/dashboard/index/es.codeurjc.ais:antonio.camas.maestre
+ceTaskId=AWpGcVIxOHUwmqmNZjOi
+ceTaskUrl=http://10.0.2.15:8686/api/ce/task?id=AWpGcVIxOHUwmqmNZjOi
