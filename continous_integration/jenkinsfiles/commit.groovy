@@ -19,11 +19,21 @@ node {
     try {
 	stage('Build') {
 	    // Run the build
-	    sh '''docker run --rm -v codeurjc-forge-jenkins-volume:/src -w /src/workspace/\$JOB_NAME maven:3.6.1-jdk-8 /bin/bash -c "mvn package -DskipTests"'''
+	    sh '''docker run --rm \
+                    -v $HOME/.m2:/root/.m2 \
+                    -v codeurjc-forge-jenkins-volume:/src \
+                    -w /src/workspace/\$JOB_NAME \
+                    maven:3.6.1-jdk-8 \
+                    /bin/bash -c "mvn package -DskipTests"'''
 	}
 	stage('Test') {
 	    // Run the Tests
-	    sh '''docker run --rm -v codeurjc-forge-jenkins-volume:/src -w /src/workspace/\$JOB_NAME maven:3.6.1-jdk-8 /bin/bash -c "mvn test -Dtest=BoardTest*,TicTacToeGameTest.java"'''
+	    sh '''docker run --rm \
+                    -v $HOME/.m2:/root/.m2 \
+                    -v codeurjc-forge-jenkins-volume:/src \
+                    -w /src/workspace/\$JOB_NAME \
+                    maven:3.6.1-jdk-8 \
+                    /bin/bash -c "mvn test -Dtest=BoardTest*,TicTacToeGameTest.java"'''
 	}
 	stage('Result'){
 	    junit 'target/**/*.xml'
@@ -33,5 +43,5 @@ node {
 	echo 'Build Failed'
 	currentBuild.result = 'FAILURE'
     }
-    finally {}
+    finally { sh 'rm -fr target' }
 }
