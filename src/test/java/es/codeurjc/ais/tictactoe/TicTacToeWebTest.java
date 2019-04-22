@@ -3,11 +3,13 @@ package es.codeurjc.ais.tictactoe;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
+import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,10 +20,14 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.testcontainers.containers.BrowserWebDriverContainer;
+import static org.testcontainers.containers.BrowserWebDriverContainer.VncRecordingMode.RECORD_ALL;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 
 @RunWith(Parameterized.class)
@@ -43,12 +49,26 @@ public class TicTacToeWebTest {
 	
 	@Parameter(0) public List<Movement> movements;
 
-    private List<WebDriver> drivers = new ArrayList<WebDriver>();
+	private static final Logger LOGGER = LoggerFactory.getLogger(BrowserWebDriverContainer.class);
+	public static Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LOGGER);
+	
+	@Rule
+	public BrowserWebDriverContainer chrome1 = new BrowserWebDriverContainer<>()
+    	.withDesiredCapabilities(DesiredCapabilities.chrome())
+    	.withRecordingMode(RECORD_ALL, new File("target"))
+    	.withLogConsumer(logConsumer);
+	
+	@Rule
+	public BrowserWebDriverContainer chrome2 = new BrowserWebDriverContainer<>()
+    	.withDesiredCapabilities(DesiredCapabilities.chrome())
+    	.withRecordingMode(RECORD_ALL, new File("target"))
+    	.withLogConsumer(logConsumer);
+	
+    private List<RemoteWebDriver> drivers = new ArrayList<RemoteWebDriver>();
 
     @BeforeClass
-    public static void setupClass() {
-            WebDriverManager.chromedriver().setup();
-            WebApp.start();
+    public static void setupClass() {    		
+            WebApp.startOnPort("7070");
     }
 
     @AfterClass
@@ -58,13 +78,13 @@ public class TicTacToeWebTest {
 
     @Before
     public void setupTest() {
-        drivers.add(new ChromeDriver());
-        drivers.add(new ChromeDriver());
+        drivers.add(chrome1.getWebDriver());
+        drivers.add(chrome2.getWebDriver());
     }
 
     @After
     public void teardown() {
-    	for(WebDriver driver : drivers) {
+    	for(RemoteWebDriver driver : drivers) {
             if (driver != null) {
                     driver.quit();
             }
@@ -72,11 +92,17 @@ public class TicTacToeWebTest {
     	drivers.clear();
     }
     
-
+    
+    
+    public String getAppUrl() {
+    	return System.getProperty("APP_URL");
+    }
+    
 	@Test
 	public void TicTacToeWeb_Generic_System_Test() throws InterruptedException {
-		for(WebDriver driver : drivers) {
-			driver.get("http://localhost:8080/");
+		for(RemoteWebDriver driver : drivers) {
+			driver.get(this.getAppUrl());
+			Thread.sleep(10000);
 		}
 		
 		drivers.get(0).findElement(By.id("nickname")).sendKeys(movements.get(0).label);

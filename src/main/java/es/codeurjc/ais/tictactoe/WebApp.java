@@ -26,6 +26,11 @@ public class WebApp implements WebSocketConfigurer {
     	start(new String[] {});
     }
 
+    public static void startOnPort(String port) {
+    	System.setProperty("server.port", port);
+    	start(new String[] {});
+    }
+    
 	private static void start(String[] args) {
 		if(app == null) {
     		app = SpringApplication.run(WebApp.class, args);
