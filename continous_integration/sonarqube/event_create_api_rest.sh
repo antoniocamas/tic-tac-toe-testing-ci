@@ -96,4 +96,7 @@ source ${SONARQUBE_REPORT}
 getTaskDetails
 ANALYSIS_ID=$(getAnalysisID)
 
-curl -i -X "POST" -u admin:admin ${SONARQUBE_URL}/api/project_analyses/create_event?analysis=${ANALYSIS_ID}\&category=OTHER\&name=${GIT_REF}
+curl \
+    -i -X "POST" -u admin:admin \
+    ${SONARQUBE_URL}/api/project_analyses/create_event?analysis=${ANALYSIS_ID}\&category=OTHER\&name=${GIT_REF}
+
