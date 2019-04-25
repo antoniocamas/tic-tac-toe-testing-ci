@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -x
+set -e
 
 SONARQUBE_URL=""
 ANALYSIS_ID=""
@@ -81,8 +82,18 @@ function getTaskDetails ()
 
 function getAnalysisID ()
 {
-    local analysis_id=`python -c "import json; fd=open('"${TASKDETAILS}"'); answer=json.loads(fd.readline()); print answer['task']['analysisId']; fd.close()"`
-    [[ -z "$analysis_id" ]] && echo "AnalysisId not found" && cat "${TASKDETAILS}" && return 1;
+    local analysis_id=`python -c "
+import json; 
+fd=open('"${TASKDETAILS}"'); 
+answer=json.loads(fd.readline()); 
+print answer['task']['analysisId']; 
+fd.close()"`
+    
+    [[ -z "$analysis_id" ]] && \
+        echo "AnalysisId not found" && \
+        cat "${TASKDETAILS}" && \
+        return 1;
+
     echo ${analysis_id}
     return 0
 }
@@ -99,4 +110,3 @@ ANALYSIS_ID=$(getAnalysisID)
 curl \
     -i -X "POST" -u admin:admin \
     ${SONARQUBE_URL}/api/project_analyses/create_event?analysis=${ANALYSIS_ID}\&category=OTHER\&name=${GIT_REF}
-
