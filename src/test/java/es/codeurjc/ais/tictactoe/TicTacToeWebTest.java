@@ -67,13 +67,20 @@ public class TicTacToeWebTest {
     private List<RemoteWebDriver> drivers = new ArrayList<RemoteWebDriver>();
 
     @BeforeClass
-    public static void setupClass() {    		
-            WebApp.startOnPort("7070");
+    public static void setupClass() {
+    	if (Boolean.getBoolean("DontStartApp"))
+    		return;
+    				
+    	WebApp.startOnPort("7070");
+    	
     }
 
     @AfterClass
     public static void teardownClass() {
-            WebApp.stop();
+    	if (Boolean.getBoolean("DontStartApp"))
+    		return;
+    	
+        WebApp.stop();
     }
 
     @Before
