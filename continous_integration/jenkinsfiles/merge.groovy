@@ -15,16 +15,25 @@ node {
 	)
     }
     try {
-	stage('Test') {
-	    // Run the build
-	    sh '''docker run --rm \
-                  -v /var/run/docker.sock:/var/run/docker.sock \
-                  -v $HOME/.m2:/root/.m2 \
-                  -v codeurjc-forge-jenkins-volume:/src \
-                  -w /src/workspace/\$JOB_NAME \
-                  -p 7070:7070 \
-                  maven:3.6.1-jdk-8 \
-                  /bin/bash -c "mvn test -DAPP_URL=http://10.0.2.15:7070/"'''
+
+	try {
+	    stage('Test') {
+		// Run the build
+		sh '''docker run --rm \
+		      -v /var/run/docker.sock:/var/run/docker.sock \
+		      -v $HOME/.m2:/root/.m2 \
+		      -v codeurjc-forge-jenkins-volume:/src \
+		      -w /src/workspace/\$JOB_NAME \
+		      -p 7070:7070 \
+		      maven:3.6.1-jdk-8 \
+		      /bin/bash -c "mvn test -DAPP_URL=http://10.0.2.15:7070/"'''
+	    }
+	}
+	finally {
+	    stage('Result'){
+		archiveArtifacts 'target/*.flv'
+		junit 'target/**/*.xml'
+	    }
 	}
 	stage('SonarQube analysis'){
 	    withSonarQubeEnv {
@@ -68,13 +77,8 @@ node {
 	currentBuild.result = 'FAILURE'
     }
     finally {
-	stage('Result'){
-	    archiveArtifacts 'target/*.flv'
-	    junit 'target/**/*.xml'
-	}
-
 	//clean up
 	sh 'git clean -dfx'
-	sh '''docker rmi $(docker images -f "dangling=true" -q)'''
+	sh '''set +e; docker rmi $(docker images -f "dangling=true" -q)'''
     }
 }
