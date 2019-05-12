@@ -83,13 +83,16 @@ def usage():
 
 def add_suffix_to_version(value):
 
+    retval = value
     if not value.endswith(SUFFIX):
-        return value + SUFFIX
+        retval =  value + SUFFIX
+    return retval
 
 def remove_suffix_from_version(value):
 
     if value.endswith(SUFFIX):
         return value.split(SUFFIX)[0]
+    return value
 
     
 def bump(pom_xml, version_to_write, in_place, readversion, remove_suffix):
