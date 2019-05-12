@@ -1,7 +1,5 @@
 node {
     stage('Preparation') {
-	git credentialsId: 'hudson_gerrit', url: 'ssh://10.0.2.15:29418/tic-tac-toe-testing'
-	
 	// Fetch the changeset to a local branch using the build parameters provided to the
 	// build by the Gerrit plugin...
 	checkout(
@@ -35,13 +33,15 @@ node {
                     maven:3.6.1-jdk-8 \
                     /bin/bash -c "mvn test -Dtest=BoardTest*,TicTacToeGameTest.java"'''
 	}
-	stage('Result'){
-	    junit 'target/**/*.xml'
-	}
     }
     catch (exc){
 	echo 'Build Failed'
 	currentBuild.result = 'FAILURE'
     }
-    finally { sh 'rm -fr target' }
+    finally {
+	stage('Result'){
+	    junit 'target/**/*.xml'
+	}
+	sh 'git clean -dfx'
+    }
 }

@@ -1,6 +1,5 @@
 node {
     stage('Preparation') {
-	git credentialsId: 'hudson_gerrit', url: 'ssh://10.0.2.15:29418/tic-tac-toe-testing'
 	// Fetch the changeset to a local branch using the build parameters provided to the
 	// build by the Gerrit plugin...
 	checkout(
@@ -18,7 +17,7 @@ node {
     try {
 	stage('Test') {
 	    // Run the build
-	             sh '''docker run --rm \
+	    sh '''docker run --rm \
                   -v /var/run/docker.sock:/var/run/docker.sock \
                   -v $HOME/.m2:/root/.m2 \
                   -v codeurjc-forge-jenkins-volume:/src \
@@ -27,13 +26,9 @@ node {
                   maven:3.6.1-jdk-8 \
                   /bin/bash -c "mvn test -DAPP_URL=http://10.0.2.15:7070/"'''
 	}
-	stage('Result'){
-	    archiveArtifacts 'target/*.flv'
-	    junit 'target/**/*.xml'
-	}
 	stage('SonarQube analysis'){
 	    withSonarQubeEnv {
-		           sh '''docker run --rm \
+		sh '''docker run --rm \
                   -v $HOME/.m2:/root/.m2 \
                   -v codeurjc-forge-jenkins-volume:/src \
                   -w /src/workspace/\$JOB_NAME \
@@ -53,7 +48,7 @@ node {
 		}
 	    }
 	    withSonarQubeEnv {
-		           sh '''./continous_integration/sonarqube/event_create_api_rest.sh \
+		sh '''./continous_integration/sonarqube/event_create_api_rest.sh \
                       -v --sq-url \$SONAR_HOST_URL \
                       --sq-report target/sonar/report-task.txt \
                       --git-ref \$GERRIT_PATCHSET_REVISION'''
@@ -73,7 +68,13 @@ node {
 	currentBuild.result = 'FAILURE'
     }
     finally {
+	stage('Result'){
+	    archiveArtifacts 'target/*.flv'
+	    junit 'target/**/*.xml'
+	}
+
 	//clean up
-	sh 'rm -fr target && rm continous_integration/build/*.jar'
+	sh 'git clean -dfx'
+	sh '''docker rmi $(docker images -f "dangling=true" -q)'''
     }
 }
