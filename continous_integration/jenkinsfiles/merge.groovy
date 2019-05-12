@@ -79,6 +79,6 @@ node {
     finally {
 	//clean up
 	sh 'git clean -dfx'
-	sh '''set +e; docker rmi $(docker images -f "dangling=true" -q)'''
+	sh '''docker rmi $(docker images -f "dangling=true" -q) || true'''
     }
 }

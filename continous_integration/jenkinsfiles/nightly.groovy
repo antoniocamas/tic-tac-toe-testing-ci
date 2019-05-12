@@ -92,7 +92,7 @@ node {
 	}
 	//clean up
 	sh '''git clean -dfx'''
-	sh '''set +e; docker stop $(docker ps -a --filter "name=nigthly_job" --format "{{ .Names }}")'''
-	sh '''set +e; docker rmi $(docker images -f "dangling=true" -q)'''
+	sh '''docker stop $(docker ps -a --filter "name=nigthly_job" --format "{{ .Names }}") || true'''
+	sh '''docker rmi $(docker images -f "dangling=true" -q) || true'''
     }
 }
