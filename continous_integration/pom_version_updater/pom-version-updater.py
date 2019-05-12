@@ -11,6 +11,7 @@ Usage:
 Options:
     -r  readversion: just prints the version number without suffix
     -i  Edit pom.xml in place, instead of writing result to stdout
+    -c  confirm current version. Removes suffix.
     -v  specify a version number, e.g. "1.23". It will add a suffix if not provided
 
 If pom.xml file is not specified, the script will look in the current working directory.
@@ -33,14 +34,16 @@ class InvalidVersion(Exception):
 
 
 def main(args):
-    next_version = None
+    version_to_write = None
     in_place = False
     readversion = False
+    remove_suffix = False
     pom_xml = './pom.xml'
 
     try:
         opts, args = getopt.getopt(
-            args, 'rv:ih', ['readversion', 'version', 'inplace', 'help'])
+            args, 'rv:ich', ['readversion', 'version',
+                             'inplace', 'remove_suffix' ,'help'])
     except getopt.GetoptError:
         usage()
         return False
@@ -50,11 +53,13 @@ def main(args):
             usage()
             return False
         elif opt in ('-v', '--version'):
-            next_version = add_suffix_to_version(value)
+            version_to_write = add_suffix_to_version(value)
         elif opt in ('-i', '--inplace'):
             in_place = True
         elif opt in ('-r', '--readversion'):
             readversion = True
+        elif opt in ('-c', '--remove_suffix'):
+            remove_suffix = True
         else:
             usage()
             return False
@@ -67,7 +72,7 @@ def main(args):
         return False
 
     try:
-        bump(pom_xml, next_version, in_place, readversion)
+        bump(pom_xml, version_to_write, in_place, readversion, remove_suffix)
         return True
     except InvalidVersion as e:
         log(e)
@@ -87,7 +92,7 @@ def remove_suffix_from_version(value):
         return value.split(SUFFIX)[0]
 
     
-def bump(pom_xml, next_version, in_place, readversion):
+def bump(pom_xml, version_to_write, in_place, readversion, remove_suffix):
 
     parser = ET.XMLParser(remove_comments=False)
     xml = ET.parse(pom_xml, parser=parser)
@@ -104,8 +109,12 @@ def bump(pom_xml, next_version, in_place, readversion):
         print(remove_suffix_from_version(current_version))
         return
 
+    # update version by removing suffix
+    if remove_suffix:
+        version_to_write = remove_suffix_from_version(current_version)
+        
     # Update the XML
-    version_tag.text = next_version
+    version_tag.text = version_to_write
     
     if in_place:
         # Write back to pom.xml
